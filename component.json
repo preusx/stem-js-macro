@@ -1,0 +1,31 @@
+{
+  "name": "stem-js-macro",
+  "version": "0.1.10",
+  "main": "./index.sjs",
+  "author": "Alex Tkachenko <preusx.dev@gmail.com>",
+  "license": "MIT",
+  "description": "Macros for sweet.js",
+  "scripts": [
+    "macros/operators.sjs",
+    "macros/catch.sjs",
+    "macros/arrow-function.sjs",
+    "macros/decorator.sjs",
+    "macros/for.sjs",
+    "macros/enum.sjs"
+  ],
+  "all-files": [
+    "macros/utility.sjs",
+    "macros/operators.sjs",
+    "macros/catch.sjs",
+    "macros/arrow-function.sjs",
+    "macros/function.sjs",
+    "macros/for.sjs",
+    "macros/class.sjs",
+    "macros/decorator.sjs",
+    "macros/enum.sjs",
+    "macros/import.sjs",
+    "macros/exports.sjs",
+    "macros/angular/dependency-injection.sjs",
+    "macros/angular/directive.sjs"
+  ]
+}
