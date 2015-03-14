@@ -1,85 +1,7 @@
-/**
- * Function pattern matcher.
- */
-macroclass $__aDIFunction {
-    pattern { rule { function $name ($params:ident (,) ...) { $body ...} } }
-    pattern { rule { function ($params:ident (,) ...) { $body ...} } with $name = #{}; }
-    pattern { rule { $name ($params:ident (,) ...) { $body ...} } }
-    pattern { rule { ($params:ident (,) ...) { $body ...} } with $name = #{}; }
-}
-
-
-/**
- * Class, namespace and method patterns are from:
- * https://github.com/joehannes/sweet-at-angular
- */
-
-macroclass $__aDINamespace {
-    pattern {
-        rule { . $class }
-    }
-}
-
-macroclass $__aDIClassDef {
-     pattern {
-         rule { $classdef:($sig... $cname:ident extends $mname $baseclass:$__aDINamespace... ) }
-     }
-     pattern {
-         rule { $classdef:($sig... $cname:ident extends $bname) }
-     }
-     pattern {
-         rule { $classdef:($sig... $cname:ident) }
-     }
-}
-
-/**
- * Method pattern matcher.
- */
-macroclass $__aDIMethod {
-    pattern {
-        rule { $$mname:ident... }
-    }
-}
-
-/**
- * Class pattern matcher.
- */
-macroclass $__aDIClass {
-  pattern {
-    rule { $$klass:($definition:$__aDIClassDef {
-      $methods:(constructor ($cparams(,)...) { $cwhatever ... })
-    }) }
-  }
-  pattern {
-    rule { $$klass:($definition:$__aDIClassDef {
-      $methods:(
-      constructor ($cparams(,)...) { $cwhatever ... }
-      $($mname:$__aDIMethod ($mparams ...) {$mwhatever ... }) ...
-      )
-    }) }
-  }
-  pattern {
-    rule { $$klass:($definition:$__aDIClassDef {
-      $methods:(
-      $methods_pre:($($mname:$__aDIMethod ($mparams ...) {$mwhatever ... }) ...)
-      constructor ($cparams(,)...) { $cwhatever ... }
-      )
-    }) }
-  }
-  pattern {
-    rule { $$klass:($definition:$__aDIClassDef {
-      $methods:(
-      $methods_pre:($($mname:$__aDIMethod ($mparams ...) {$mwhatever ... }) ...)
-      constructor ($cparams(,)...) { $cwhatever ... }
-      $methods_post:($($mname:$method ($mparams ...) {$mwhatever ... }) ...)
-      )
-    }) }
-  }
-}
-
+import macro from './utility.sjs'
 
 macro aDI {
-  case { _ $function:$__aDIFunction } => {
+  case { _ $function:$__function } => {
     var tokens = #{$function$params...}.map(function(t) {
         return makeValue(t.token.value, #{here});
       });
@@ -106,7 +28,7 @@ macro aDI {
     }
   }
 
-  case { _ $class:$__aDIClass } => {
+  case { _ $class:$__class } => {
     var tokens = #{$class$$klass$methods$cparams...}.map(function(t) {
         return makeValue(t.token.value, #{here});
       });

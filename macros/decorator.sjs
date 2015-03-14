@@ -1,19 +1,16 @@
-macroclass $__decotarator {
-  pattern {
-    rule { @$name:ident($params...) }
-  }
-}
+import macro from './utility.sjs'
 
-macroclass $__decotaratorTypeName {
-  pattern {
-    rule { class }
-    with $name = #{ class };
-  }
-  pattern {
-    rule { function }
-    with $name = #{ function };
-  }
-}
+// Old one
+// macroclass $__decotaratorTypeName {
+//   pattern {
+//     rule { class }
+//     with $name = #{ class };
+//   }
+//   pattern {
+//     rule { function }
+//     with $name = #{ function };
+//   }
+// }
 
 macro @ {
   /**
@@ -42,31 +39,84 @@ macro @ {
    *     var varialble;
    *   }
    *   // Transforms to:
+   *   function some() {
+   *     var varialble;
+   *   }
    *   Decotarator({
    *     type: 'string'
    *   })(some);
    *   Injector({
    *     template: 'tempate.html'
    *   })(some);
-   *   function some() {
-   *     var varialble;
-   *   }
    */
-  case { _
+
+  case { _ // Function decorator
       $name:ident($params...)
-      $any:$__decotarator ...
-      $type:$__decotaratorTypeName $fname:ident
+      $any:( @$name:ident($params...) ) ...
+      $function:$__function
     } => {
       var result = [];
 
-      result = result.concat(#{ $name($params ...)($fname) }); // Applying current annotation
+      result = result.concat(#{
+        function $function$name ($function$params ...) {
+          $function$body ...
+        }
+      });
+
+      result = result.concat(#{
+        $name($params ...)($function$name)
+      }); // Applying current annotation
+
       try { // Checking if there is some other. If so - applying those too.
-        result = result.concat(#{ $($any$name($any$params ...)($fname)) ... });
+        result = result.concat(#{
+          $($any$name($any$params ...)($function$name)) ...
+        });
       } catch (e) {}
-      result = result.concat(#{ $type$name $fname });
 
       return result;
     }
+
+  case { _ // Class decorator
+      $name:ident($params...)
+      $any:( @$name:ident($params...) ) ...
+      $class:$__class
+    } => {
+      var result = [];
+
+      result = result.concat(#{
+        $class$$klass
+      });
+
+      result = result.concat(#{
+        $name($params ...)($class$$klass$definition$classdef$cname)
+      }); // Applying current annotation
+
+      try { // Checking if there is some other. If so - applying those too.
+        result = result.concat(#{
+          $($any$name($any$params ...)($class$$klass$definition$classdef$cname)) ...
+        });
+      } catch (e) {}
+
+      return result;
+    }
+
+  // Old one
+  // case { _
+  //     $name:ident($params...)
+  //     $any:( @$name:ident($params...) ) ...
+  //     $type:$__decotaratorTypeName $fname:ident
+  //   } => {
+  //     var result = [];
+
+  //     result = result.concat(#{ $type$name $fname });
+
+  //     result = result.concat(#{ $name($params ...)($fname) }); // Applying current annotation
+  //     try { // Checking if there is some other. If so - applying those too.
+  //       result = result.concat(#{ $($any$name($any$params ...)($fname)) ... });
+  //     } catch (e) {}
+
+  //     return result;
+  //   }
 
   /**
    * `this` nickname `@` macro
