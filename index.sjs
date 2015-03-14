@@ -12,8 +12,6 @@ macroclass $__function {
     pattern { rule { ($params:ident (,) ...) { $body ...} } with $name = #{}; }
 }
 
-export $__function
-
 
 /**
  * Class, namespace and method patterns are from:
@@ -82,8 +80,6 @@ macroclass $__class {
     }) }
   }
 }
-
-export $__class
 /**
  * Power function operator.
  *
