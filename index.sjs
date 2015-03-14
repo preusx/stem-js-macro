@@ -1,4 +1,90 @@
 /**
+ * Pattern matchers
+ * ======================================================================== */
+
+/**
+ * Function pattern matcher.
+ */
+macroclass $__function {
+    pattern { rule { function $name ($params:ident (,) ...) { $body ...} } }
+    pattern { rule { function ($params:ident (,) ...) { $body ...} } with $name = #{}; }
+    pattern { rule { $name ($params:ident (,) ...) { $body ...} } }
+    pattern { rule { ($params:ident (,) ...) { $body ...} } with $name = #{}; }
+}
+
+export $__function
+
+
+/**
+ * Class, namespace and method patterns are from:
+ * https://github.com/joehannes/sweet-at-angular
+ */
+
+macroclass $__namespace {
+    pattern {
+        rule { . $class }
+    }
+}
+
+macroclass $__classDef {
+     pattern {
+         rule { $classdef:($sig... $cname:ident extends $mname $baseclass:$__namespace... ) }
+     }
+     pattern {
+         rule { $classdef:($sig... $cname:ident extends $bname) }
+     }
+     pattern {
+         rule { $classdef:($sig... $cname:ident) }
+     }
+}
+
+/**
+ * Method pattern matcher.
+ */
+macroclass $__method {
+    pattern {
+        rule { $$mname:ident... }
+    }
+}
+
+/**
+ * Class pattern matcher.
+ */
+macroclass $__class {
+  pattern {
+    rule { $$klass:($definition:$__classDef {
+      $methods:(constructor ($cparams(,)...) { $cwhatever ... })
+    }) }
+  }
+  pattern {
+    rule { $$klass:($definition:$__classDef {
+      $methods:(
+      constructor ($cparams(,)...) { $cwhatever ... }
+      $($mname:$__method ($mparams ...) {$mwhatever ... }) ...
+      )
+    }) }
+  }
+  pattern {
+    rule { $$klass:($definition:$__classDef {
+      $methods:(
+      $methods_pre:($($mname:$__method ($mparams ...) {$mwhatever ... }) ...)
+      constructor ($cparams(,)...) { $cwhatever ... }
+      )
+    }) }
+  }
+  pattern {
+    rule { $$klass:($definition:$__classDef {
+      $methods:(
+      $methods_pre:($($mname:$__method ($mparams ...) {$mwhatever ... }) ...)
+      constructor ($cparams(,)...) { $cwhatever ... }
+      $methods_post:($($mname:$method ($mparams ...) {$mwhatever ... }) ...)
+      )
+    }) }
+  }
+}
+
+export $__class
+/**
  * Power function operator.
  *
  * @example
@@ -110,22 +196,17 @@ macro (->) {
 }
 
 export (->)
-macroclass $__decotarator {
-  pattern {
-    rule { @$name:ident($params...) }
-  }
-}
-
-macroclass $__decotaratorTypeName {
-  pattern {
-    rule { class }
-    with $name = #{ class };
-  }
-  pattern {
-    rule { function }
-    with $name = #{ function };
-  }
-}
+// Old one
+// macroclass $__decotaratorTypeName {
+//   pattern {
+//     rule { class }
+//     with $name = #{ class };
+//   }
+//   pattern {
+//     rule { function }
+//     with $name = #{ function };
+//   }
+// }
 
 macro @ {
   /**
@@ -154,31 +235,84 @@ macro @ {
    *     var varialble;
    *   }
    *   // Transforms to:
+   *   function some() {
+   *     var varialble;
+   *   }
    *   Decotarator({
    *     type: 'string'
    *   })(some);
    *   Injector({
    *     template: 'tempate.html'
    *   })(some);
-   *   function some() {
-   *     var varialble;
-   *   }
    */
-  case { _
+
+  case { _ // Function decorator
       $name:ident($params...)
-      $any:$__decotarator ...
-      $type:$__decotaratorTypeName $fname:ident
+      $any:( @$name:ident($params...) ) ...
+      $function:$__function
     } => {
       var result = [];
 
-      result = result.concat(#{ $name($params ...)($fname) }); // Applying current annotation
+      result = result.concat(#{
+        function $function$name ($function$params ...) {
+          $function$body ...
+        }
+      });
+
+      result = result.concat(#{
+        $name($params ...)($function$name)
+      }); // Applying current annotation
+
       try { // Checking if there is some other. If so - applying those too.
-        result = result.concat(#{ $($any$name($any$params ...)($fname)) ... });
+        result = result.concat(#{
+          $($any$name($any$params ...)($function$name)) ...
+        });
       } catch (e) {}
-      result = result.concat(#{ $type$name $fname });
 
       return result;
     }
+
+  case { _ // Class decorator
+      $name:ident($params...)
+      $any:( @$name:ident($params...) ) ...
+      $class:$__class
+    } => {
+      var result = [];
+
+      result = result.concat(#{
+        $class$$klass
+      });
+
+      result = result.concat(#{
+        $name($params ...)($class$$klass$definition$classdef$cname)
+      }); // Applying current annotation
+
+      try { // Checking if there is some other. If so - applying those too.
+        result = result.concat(#{
+          $($any$name($any$params ...)($class$$klass$definition$classdef$cname)) ...
+        });
+      } catch (e) {}
+
+      return result;
+    }
+
+  // Old one
+  // case { _
+  //     $name:ident($params...)
+  //     $any:( @$name:ident($params...) ) ...
+  //     $type:$__decotaratorTypeName $fname:ident
+  //   } => {
+  //     var result = [];
+
+  //     result = result.concat(#{ $type$name $fname });
+
+  //     result = result.concat(#{ $name($params ...)($fname) }); // Applying current annotation
+  //     try { // Checking if there is some other. If so - applying those too.
+  //       result = result.concat(#{ $($any$name($any$params ...)($fname)) ... });
+  //     } catch (e) {}
+
+  //     return result;
+  //   }
 
   /**
    * `this` nickname `@` macro
@@ -196,6 +330,7 @@ macro @ {
 }
 
 export @
+
 /**
  * Some `for` extensions.
  */

@@ -6,6 +6,7 @@
   "license": "MIT",
   "description": "Macros for sweet.js",
   "scripts": [
+    "macros/utility.sjs",
     "macros/operators.sjs",
     "macros/catch.sjs",
     "macros/arrow-function.sjs",

@@ -1,5 +1,3 @@
-import macro from './utility.sjs'
-
 macro aDI {
   case { _ $function:$__function } => {
     var tokens = #{$function$params...}.map(function(t) {

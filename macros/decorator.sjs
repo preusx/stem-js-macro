@@ -1,5 +1,3 @@
-import macro from './utility.sjs'
-
 // Old one
 // macroclass $__decotaratorTypeName {
 //   pattern {
