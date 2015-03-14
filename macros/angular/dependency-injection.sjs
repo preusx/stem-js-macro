@@ -80,7 +80,10 @@ macroclass $__aDIClass {
 
 macro aDI {
   case { _ $function:$__aDIFunction } => {
-    var tokens = #{$function$params...}.map(function(t) { return makeValue(t.token.value, #{here}) });
+    var tokens = #{$function$params...}.map(function(t) {
+        return makeValue(t.token.value, #{here});
+      });
+
     if(tokens.length > 0) {
       letstx $annotations... = tokens;
       return #{
@@ -104,7 +107,10 @@ macro aDI {
   }
 
   case { _ $class:$__aDIClass } => {
-    var tokens = #{$class$$klass$methods$cparams...}.map(function(t) { return makeValue(t.token.value, #{here}) });
+    var tokens = #{$class$$klass$methods$cparams...}.map(function(t) {
+        return makeValue(t.token.value, #{here});
+      });
+
     if(tokens.length > 0) {
       letstx $annotations... = tokens;
       return #{
